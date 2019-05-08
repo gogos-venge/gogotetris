@@ -5,8 +5,8 @@ S: Rotate Counter Clockwise
 Enter: Pause
 Arrows: Control (except up)
 
-As I said before there's a great chance you'll give up trying to build this, although I promise it builds, so everything in the code is correct, you can grab it and learn some stuff if you find them worthy of learning. In the slight of possibilities you want this built, you're going to need freetype262.dll (freetype262d.dll for debug), SDL2.dll, SDL2_mixer.dll, SDL2_ttf.dll, PressStart2P.ttf, and the music folder to be placed in the root of the executable. Failing to do so, will result in fatal errors or maybe nothing, because I'm lazy to do checks, deeply sorry. I think nuget will try to get all the needed packages to build, but VS won't copy some of these DLLs in the output folder (I think freetype262, SDL2_ttf, and SDL2_mixer).
+As I said before there's a great chance you'll give up trying to build this, although I promise it builds, so everything in the code is correct, you can grab it and learn some stuff if you find them worthy of learning. In the slight of possibilities you want this built, you're going to need freetype262.dll (freetype262d.dll for debug), SDL2.dll, SDL2_mixer.dll, SDL2_ttf.dll, PressStart2P.ttf, and the music folder to be placed in the root of the executable. Failing to do so, will result in fatal errors or maybe nothing, because I'm lazy to do checks, deeply sorry. I think nuget will try to get all the needed packages to build, but VS won't copy some of these DLLs in the output folder (I think freetype262, SDL2_ttf, and SDL2_mixer) so you'll have to copy them yourself.
 
-And ofc... Have fuN!
+Thanks for reading and ofc... Have fuN!
 
 Gogos Venge
