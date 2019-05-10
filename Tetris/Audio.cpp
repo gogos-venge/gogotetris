@@ -15,7 +15,7 @@ Audio::Audio(Game * g)
 	Pool[4] = Mix_LoadWAV("music\\levelup.wav");
 	Pool[5] = Mix_LoadWAV("music\\tetris.wav");
 	Pool[6] = Mix_LoadWAV("music\\gameover.wav");
-
+	Pool[7] = Mix_LoadWAV("music\\drop.wav");
 	SetGame(g);
 }
 
@@ -54,7 +54,7 @@ void Audio::SetGame(Game * g) {
 		PlaySound(1);
 	});
 
-	g->OnClearLine([this] {
+	g->OnCheckLine([this] {
 		PlaySound(2);
 	});
 
@@ -66,7 +66,11 @@ void Audio::SetGame(Game * g) {
 		PlaySound(4);
 	});
 
-	g->OnTetris([this] {
+	g->OnTetrisCheck([this] {
 		PlaySound(5);
+	});
+
+	g->OnClearLine([this] {
+		PlaySound(7);
 	});
 }

@@ -87,7 +87,12 @@ void Renderer::RenderBrick(int tile_x, int tile_y, int color, int marginLeft, in
 	int pos_x = tile_x * blockWidth;
 	int pos_y = tile_y * blockHeight;
 
-	RenderTexture(ghost ? Bricks[color - 1] : GhostBricks[color - 1], pos_x + padding + marginLeft + offset_x, pos_y + padding + marginTop + offset_y, blockWidth - padding * 2, blockHeight - padding * 2);
+	RenderTexture(!ghost ? Bricks[color - 1] : GhostBricks[color - 1],
+		pos_x + padding + marginLeft + offset_x,
+		pos_y + padding + marginTop + offset_y,
+		blockWidth - padding * 2,
+		blockHeight - padding * 2
+	);
 }
 
 /*Renders a texture over the given coordinates of a rectangle*/
@@ -117,6 +122,17 @@ void Renderer::RenderPlayfield() {
 		for (int j = 0; j < g->HEIGHT; j++) {
 			if (g->Playfield[i][j]) {
 				RenderBrick(i, j - 20, g->Playfield[i][j], FRAME_WIDTH, FRAME_HEIGHT, 0, 0, 0, false);
+			}
+		}
+	}
+}
+
+void Renderer::HighlightLine(int time, int * lines) {
+	for (int k = 0; k < 4; k++) {
+		if (lines[k]) {
+			for (int j = 0; j < g->WIDTH; j++) {
+				int c = time % 2 ? g->Playfield[j][lines[k]] : 8;
+				RenderBrick(j, lines[k] - 20, c, FRAME_WIDTH, FRAME_HEIGHT, 0, 0, 0, false);
 			}
 		}
 	}
@@ -172,17 +188,18 @@ void Renderer::CreateBrickTextures(int bevel) {
 
 	int blockWidth = (TETRIS_AREA - FRAME_WIDTH * 2) / g->WIDTH;
 	int blockHeight = blockWidth;
-	Color c[7] = {
+	Color c[8] = {
 		{ 0x00,0xF0,0xF0 },
 		{ 0x00,0x00,0xF0 },
 		{ 0xF0,0xA0,0x00 },
 		{ 0xFF,0xFF,0x00 },
 		{ 0x00,0xF0,0x00 },
 		{ 0xF0,0x00,0xF0 },
-		{ 0xF0,0x00,0x00 }
+		{ 0xF0,0x00,0x00 },
+		{ 0xFF,0xFF,0xFF } //<-- white for brick flashing
 	};
 
-	for (int b = 0; b < 7; b++) {
+	for (int b = 0; b < 8; b++) {
 		int* pixels = (int*)malloc(blockWidth * blockHeight * sizeof(int));
 		for (int i = 0; i < blockHeight; i++) {
 			for (int j = 0; j < blockWidth; j++) {

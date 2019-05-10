@@ -79,32 +79,18 @@ void Game::ResetCurrentBlock() {
 
 /*Moves the current block to the X axis*/
 void Game::MoveCurrentBlockX(int offset_x) {
-	if (!DetectCollision(offset_x, 0, CurrentBlock)) {
-		CurrentBlock->x += offset_x;
+	if (DetectCollision(offset_x, 0, CurrentBlock)) {
+		TriggerCallbacks(CollisionXCallbacks, CBLENGTH);
 	}
 	else {
-		if (this->CollisionXCallback != NULL) {
-			this->CollisionXCallback();
-		}
+		CurrentBlock->x += offset_x;
 	}
 }
 
-/*Moves the current block to the Y axis. If a collision is detected, the block is locked down, clears any new lines, updates metrics and engages a new block.
-Better not use negative values here. An event is also triggered after the block collides*/
+/*Moves the current block to the Y axis. An event is also triggered after the block collides*/
 void Game::MoveCurrentBlockY(int offset_y) {
 	if (DetectCollision(0, offset_y, CurrentBlock)) {
-		if (this->CollisionYCallback != NULL) {
-			this->CollisionYCallback();
-		}
-
-		ImpressCurrentBlock();
-		UpdateMetrics(
-			ClearLines(
-				CheckLines()
-			)
-		);
-		ResetCurrentBlock();
-		EngageBlock();
+		TriggerCallbacks(CollisionYCallbacks, CBLENGTH);
 	}
 	else {
 		CurrentBlock->y += offset_y;
@@ -118,8 +104,8 @@ void Game::RotateCurrentBlockCW() {
 		//Undo Rotation. Implement Wall Kick for SRS
 		CurrentBlock->RotateCCW();
 	}
-	else if (RotateBlockCallback != NULL) {
-		RotateBlockCallback();
+	else {
+		TriggerCallbacks(RotateBlockCallbacks, CBLENGTH);
 	}
 }
 
@@ -130,8 +116,8 @@ void Game::RotateCurrentBlockCCW() {
 		//Undo Rotation. Implement Wall Kick for SRS
 		CurrentBlock->RotateCW();
 	}
-	else if (RotateBlockCallback != NULL) {
-		RotateBlockCallback();
+	else  {
+		TriggerCallbacks(RotateBlockCallbacks, CBLENGTH);
 	}
 }
 
@@ -153,8 +139,8 @@ bool Game::DetectCollision(int offset_x, int offset_y, Block * b) {
 	return false;
 }
 
-/*Checks which lines are going to be removed. This also triggers an event*/
-int* Game::CheckLines() {
+/*Checks which lines are going to be removed. Returns true if found complete lines. This also triggers an event*/
+bool Game::CheckLines(int* Lines) {
 	for (int i = 0; i < 4; i++) {
 		Lines[i] = 0;
 	}
@@ -172,12 +158,15 @@ int* Game::CheckLines() {
 			Lines[c++] = i;
 		}
 	}
-	if (c > 0) {
-		if (CheckLineCallback != NULL) {
-			CheckLineCallback();
-		}
+	if (c == 4) {
+		TriggerCallbacks(TetrisCheckCallbacks, CBLENGTH);
+		return true;
 	}
-	return Lines;
+	else if (c < 4 && c > 0) {
+		TriggerCallbacks(CheckLineCallbacks, CBLENGTH);
+		return true;
+	}
+	return false;
 }
 
 /*Clears the previously checked lines. This triggers an event*/
@@ -202,13 +191,9 @@ int Game::ClearLines(int* lines) {
 		}
 	}
 	if (CurrentLines > 0) {
+		TriggerCallbacks(ClearLineCallbacks, CBLENGTH);
 		if (CurrentLines == 4) {
-			if (TetrisCallback != NULL) {
-				TetrisCallback();
-			}
-		}
-		else if (ClearLineCallback != NULL) {
-			ClearLineCallback();
+			TriggerCallbacks(TetrisClearCallbacks, CBLENGTH);
 		}
 	}
 	return CurrentLines;
@@ -241,15 +226,11 @@ void Game::UpdateMetrics(int LineNumber) {
 	Score += Multiplier * (Level + 1);
 	if (TotalLines / 10 > CurLineLvl) {
 		Level++;
-		if (LevelIncreaseCallback != NULL) {
-			LevelIncreaseCallback();
-		}
+		TriggerCallbacks(LevelIncreaseCallbacks, CBLENGTH);
 	}
 	SpeedFps = FrameSpeed(Level);
 
-	if (UpdateScoreCallback != NULL) {
-		UpdateScoreCallback();
-	}
+	TriggerCallbacks(UpdateScoreCallbacks, CBLENGTH);
 }
 
 /*Returns the speed in frames of each level based on the official Tetris guidelines*/
@@ -259,33 +240,54 @@ int Game::FrameSpeed(int Level) {
 }
 
 void Game::OnCollisionY(Callback cb) {
-	CollisionYCallback = cb;
+	AddCallback(CollisionYCallbacks, cb, CBLENGTH);
 }
 
 void Game::OnCollisionX(Callback cb) {
-	CollisionXCallback = cb;
+	AddCallback(CollisionXCallbacks, cb, CBLENGTH);
 }
 
 void Game::OnCheckLine(Callback cb) {
-	CheckLineCallback = cb;
+	AddCallback(CheckLineCallbacks, cb, CBLENGTH);
 }
 
 void Game::OnClearLine(Callback cb) {
-	ClearLineCallback = cb;
+	AddCallback(ClearLineCallbacks, cb, CBLENGTH);
 }
 
 void Game::OnRotateBlock(Callback cb) {
-	RotateBlockCallback = cb;
+	AddCallback(RotateBlockCallbacks, cb, CBLENGTH);
 }
 
 void Game::OnLevelIncrease(Callback cb) {
-	LevelIncreaseCallback = cb;
+	AddCallback(LevelIncreaseCallbacks, cb, CBLENGTH);
 }
 
-void Game::OnTetris(Callback cb) {
-	TetrisCallback = cb;
+void Game::OnTetrisCheck(Callback cb) {
+	AddCallback(TetrisCheckCallbacks, cb, CBLENGTH);
+}
+
+void Game::OnTetrisClear(Callback cb) {
+	AddCallback(TetrisClearCallbacks, cb, CBLENGTH);
 }
 
 void Game::OnUpdateScore(Callback cb) {
-	UpdateScoreCallback = cb;
+	AddCallback(UpdateScoreCallbacks, cb, CBLENGTH);
+}
+
+void Game::AddCallback(Callback* pool, Callback cb, int poolLength) {
+	for (int i = 0; i < poolLength; i++) {
+		if (pool[i] == NULL) {
+			pool[i] = cb;
+			break;
+		}
+	}
+}
+
+void Game::TriggerCallbacks(Callback* pool, int poolLength) {
+	for (int i = 0; i < poolLength; i++) {
+		if (pool[i] != NULL) {
+			pool[i]();
+		}
+	}
 }

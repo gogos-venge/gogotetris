@@ -20,7 +20,8 @@ public:
 	void RenderTexture(SDL_Texture* texture, int x, int y, int w, int h);
 	void RenderFrame();
 	void RenderPlayfield();
-	int	MessageBox(const char* msg, const char* title);
+	void HighlightLine(int time, int * lines);
+	int MessageBox(const char* msg, const char* title);
 	
 	void Clear();
 	void Update();
@@ -37,8 +38,8 @@ private:
 	SDL_Renderer*	gRenderer;
 	SDL_Texture*	Frame;
 	SDL_Rect		TetrisRect;
-	SDL_Texture*	Bricks[7];
-	SDL_Texture*	GhostBricks[7];
+	SDL_Texture*	Bricks[8];
+	SDL_Texture*	GhostBricks[8];
 
 	TTF_Font*		OldStyle;
 
