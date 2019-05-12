@@ -36,7 +36,7 @@ Renderer::Renderer(Game* g)
 	}
 
 	CreateFrame();
-	CreateBrickTextures(7);
+	CreateBrickTextures(6);
 
 	if (!success) {
 		throw SDL_GetError();
@@ -127,7 +127,8 @@ void Renderer::RenderPlayfield() {
 	}
 }
 
-void Renderer::HighlightLine(int time, int * lines) {
+/*Toggle a line from its normal color to white. Time is counter*/
+void Renderer::ToggleHighlightLine(int time, int * lines) {
 	for (int k = 0; k < 4; k++) {
 		if (lines[k]) {
 			for (int j = 0; j < g->WIDTH; j++) {

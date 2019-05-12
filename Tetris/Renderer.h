@@ -20,7 +20,7 @@ public:
 	void RenderTexture(SDL_Texture* texture, int x, int y, int w, int h);
 	void RenderFrame();
 	void RenderPlayfield();
-	void HighlightLine(int time, int * lines);
+	void ToggleHighlightLine(int time, int * lines);
 	int MessageBox(const char* msg, const char* title);
 	
 	void Clear();
