@@ -12,12 +12,12 @@
 Block* Block::Factory(int type) {
 
 	Block* b = new Normal();
-
+	
 	// I (Light Blue)
 	switch (type) {
 		case 0:
-			delete b;
-			return new Line();
+			b = new Line();
+			break;
 		case 1:
 			// J (Blue)
 			b->SetBrick(2, 0, 2);
@@ -34,8 +34,8 @@ Block* Block::Factory(int type) {
 			break;
 		case 3:
 			// O (Yellow)
-			delete b;
-			return new Square();
+			b = new Square();
+			break;
 		case 4:
 			// S (Green)
 			b->SetBrick(1, 0, 5);
@@ -59,6 +59,7 @@ Block* Block::Factory(int type) {
 			break;
 	}
 
+	b->type = type;
 	return b;
 }
 

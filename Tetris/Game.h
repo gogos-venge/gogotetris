@@ -27,15 +27,16 @@ public:
 	Block*	ProduceBlock(int index);
 	Block*	GetCurrentBlock();
 	Block*	GetNextBlock();
+	Block*	GetGhostBlock();
 	void	EngageBlock();
 	void	ImpressCurrentBlock();
-	void	ResetCurrentBlock();
 
 	//Move methods
-	void	MoveCurrentBlockX(int offset_x);
-	void	MoveCurrentBlockY(int offset_y);
+	bool	MoveCurrentBlockX(int offset_x);
+	bool	MoveCurrentBlockY(int offset_y);
 	void	RotateCurrentBlockCW();
 	void	RotateCurrentBlockCCW();
+	void	HardDropCurrentBlock();
 
 	//Event Methods
 	void	OnCollisionY(Callback cb);
@@ -74,6 +75,10 @@ private:
 	//Block Stuff
 	Block*	NextBlock;
 	Block*	CurrentBlock;
+	Block*	GhostBlock;
+	bool	MoveGhostBlockY();
+	void	GreedyMoveGhostBlockY();
+	void	PredictGhostBlock();
 
 	//Event callbacks
 	Callback CollisionYCallbacks[CBLENGTH] = {};

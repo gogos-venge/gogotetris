@@ -19,6 +19,8 @@ Renderer::Renderer(Game* g)
 		else {
 			gScreenSurface = SDL_GetWindowSurface(gWindow);
 			gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+			SDL_SetRenderDrawBlendMode(gRenderer, SDL_BLENDMODE_BLEND);
+
 			if (gRenderer == NULL) {
 				success = false;
 			}
@@ -190,21 +192,21 @@ void Renderer::CreateBrickTextures(int bevel) {
 	int blockWidth = (TETRIS_AREA - FRAME_WIDTH * 2) / g->WIDTH;
 	int blockHeight = blockWidth;
 	Color c[8] = {
-		{ 0x00,0xF0,0xF0 },
-		{ 0x00,0x00,0xF0 },
-		{ 0xF0,0xA0,0x00 },
-		{ 0xFF,0xFF,0x00 },
-		{ 0x00,0xF0,0x00 },
-		{ 0xF0,0x00,0xF0 },
-		{ 0xF0,0x00,0x00 },
-		{ 0xFF,0xFF,0xFF } //<-- white for brick flashing
+		{ 0xFF,0x00,0xF0,0xF0 },
+		{ 0xFF,0x00,0x00,0xF0 },
+		{ 0xFF,0xF0,0xA0,0x00 },
+		{ 0xFF,0xFF,0xFF,0x00 },
+		{ 0xFF,0x00,0xF0,0x00 },
+		{ 0xFF,0xF0,0x00,0xF0 },
+		{ 0xFF,0xF0,0x00,0x00 },
+		{ 0xFF,0xFF,0xFF,0xFF } //<-- white for brick flashing
 	};
 
 	for (int b = 0; b < 8; b++) {
-		int* pixels = (int*)malloc(blockWidth * blockHeight * sizeof(int));
+		Uint32* pixels = (Uint32*)malloc(blockWidth * blockHeight * sizeof(Uint32));
 		for (int i = 0; i < blockHeight; i++) {
 			for (int j = 0; j < blockWidth; j++) {
-				Color tmp = { 0,0,0 };
+				Color tmp = { 255,0,0,0 };
 				if (i < bevel && j > i && j < blockWidth - i) {
 					tmp.R = c[b].R | 0xA0;
 					tmp.G = c[b].G | 0xA0;
@@ -236,18 +238,21 @@ void Renderer::CreateBrickTextures(int bevel) {
 		}
 
 		Bricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
-		SDL_UpdateTexture(Bricks[b], NULL, pixels, blockWidth * sizeof(int));
+		SDL_UpdateTexture(Bricks[b], NULL, pixels, blockWidth * sizeof(Uint32));
+		SDL_SetTextureBlendMode(Bricks[b], SDL_BLENDMODE_BLEND);
 
-		GhostBricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
+		
 
 		for (int k = 0; k < blockWidth * blockHeight; k++) {
 			if (pixels[k]) {
-				pixels[k] += 0x88000000; //alpha
+				pixels[k] -= 0xE0000000; //alpha
 			}
 		}
 
-		SDL_UpdateTexture(GhostBricks[b], NULL, pixels, blockWidth * sizeof(int));
-
+		GhostBricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
+		SDL_UpdateTexture(GhostBricks[b], NULL, pixels, blockWidth * sizeof(Uint32));
+		SDL_SetTextureBlendMode(GhostBricks[b], SDL_BLENDMODE_BLEND);
+		
 		free(pixels);
 	}
 }
@@ -273,7 +278,7 @@ void Renderer::CreateFrame() {
 	free(pixels);
 }
 
-/*Translates an RGB Color to an int (no alpha)*/
+/*Translates an RGB Color to an int (with alpha)*/
 int Renderer::ColorToInt(Color c) {
-	return c.R << 16 | c.G << 8 | c.B;
+	return c.A << 24 | c.R << 16 | c.G << 8 | c.B;
 }

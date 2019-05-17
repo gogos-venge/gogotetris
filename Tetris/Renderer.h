@@ -21,7 +21,7 @@ public:
 	void RenderFrame();
 	void RenderPlayfield();
 	void ToggleHighlightLine(int time, int * lines);
-	int MessageBox(const char* msg, const char* title);
+	int  MessageBox(const char* msg, const char* title);
 	
 	void Clear();
 	void Update();
@@ -46,6 +46,7 @@ private:
 	Game * g;
 
 	typedef struct color {
+		int A;
 		int R;
 		int G;
 		int B;

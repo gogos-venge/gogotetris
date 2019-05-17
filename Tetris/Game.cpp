@@ -34,6 +34,11 @@ Block* Game::GetNextBlock() {
 	return NextBlock;
 }
 
+/*Returns the Ghost block*/
+Block* Game::GetGhostBlock() {
+	return GhostBlock;
+}
+
 /*Uses the Block factory to produce a block. Numbers 0 for Line to 6 for Z*/
 Block* Game::ProduceBlock(int index) {
 	return Block::Factory(index);
@@ -41,7 +46,8 @@ Block* Game::ProduceBlock(int index) {
 
 /*Generates a number from 1 to 7. Best used to pick a Block*/
 int Game::RandomBlockIndex() {
-	return (int)(7.0 * rand() / (RAND_MAX + 1.0));
+	return rand() % 7;
+	//return (int)(7.0 * rand() / (RAND_MAX + 1.0));
 }
 
 /*Next block becomes the current block, Next block uses factory to get a new one, and current block is positioned to the top most center of the playfield
@@ -49,12 +55,15 @@ Also if the engaged block collides, it means you lost*/
 void Game::EngageBlock() {
 	delete CurrentBlock;
 	CurrentBlock = NextBlock;
-
-	int index = RandomBlockIndex();
-	NextBlock = ProduceBlock(index);
 	CurrentBlock->x = 4;
 	CurrentBlock->y = 20;
 
+	delete GhostBlock;
+	GhostBlock = ProduceBlock(CurrentBlock->type);
+	PredictGhostBlock();
+
+	NextBlock = ProduceBlock(RandomBlockIndex());
+	
 	if (DetectCollision(0, 0, CurrentBlock)) {
 		GameStatus = GAMEOVER;
 	}
@@ -71,29 +80,28 @@ void Game::ImpressCurrentBlock() {
 	}
 }
 
-/*Takes the the current block to the unseen topmost of the playfield*/
-void Game::ResetCurrentBlock() {
-	CurrentBlock->x = 0;
-	CurrentBlock->y = 0;
-}
-
-/*Moves the current block to the X axis*/
-void Game::MoveCurrentBlockX(int offset_x) {
+/*Moves the current block to the X axis, and also sends the Ghost Block to bottom. Returns true if it moved*/
+bool Game::MoveCurrentBlockX(int offset_x) {
 	if (DetectCollision(offset_x, 0, CurrentBlock)) {
 		TriggerCallbacks(CollisionXCallbacks, CBLENGTH);
+		return false;
 	}
 	else {
 		CurrentBlock->x += offset_x;
+		PredictGhostBlock();
+		return true;
 	}
 }
 
-/*Moves the current block to the Y axis. An event is also triggered after the block collides*/
-void Game::MoveCurrentBlockY(int offset_y) {
+/*Moves the current block to the Y axis. An event is also triggered after the block collides. Returns true if it moved*/
+bool Game::MoveCurrentBlockY(int offset_y) {
 	if (DetectCollision(0, offset_y, CurrentBlock)) {
 		TriggerCallbacks(CollisionYCallbacks, CBLENGTH);
+		return false;
 	}
 	else {
 		CurrentBlock->y += offset_y;
+		return true;
 	}
 }
 
@@ -106,6 +114,8 @@ void Game::RotateCurrentBlockCW() {
 	}
 	else {
 		TriggerCallbacks(RotateBlockCallbacks, CBLENGTH);
+		GhostBlock->RotateCW();
+		PredictGhostBlock();
 	}
 }
 
@@ -118,7 +128,14 @@ void Game::RotateCurrentBlockCCW() {
 	}
 	else  {
 		TriggerCallbacks(RotateBlockCallbacks, CBLENGTH);
+		GhostBlock->RotateCCW();
+		PredictGhostBlock();
 	}
+}
+
+/*Moves the current block down to the furthest possible position*/
+void Game::HardDropCurrentBlock() {
+	while (MoveCurrentBlockY(1));
 }
 
 /*Returns true if a block collides on a static brick of the playfield, or the borders of the tetris area*/
@@ -275,6 +292,7 @@ void Game::OnUpdateScore(Callback cb) {
 	AddCallback(UpdateScoreCallbacks, cb, CBLENGTH);
 }
 
+/*Adds a callback to a specific callback pool*/
 void Game::AddCallback(Callback* pool, Callback cb, int poolLength) {
 	for (int i = 0; i < poolLength; i++) {
 		if (pool[i] == NULL) {
@@ -284,10 +302,31 @@ void Game::AddCallback(Callback* pool, Callback cb, int poolLength) {
 	}
 }
 
+/*Calls all the callbacks of a callback pool*/
 void Game::TriggerCallbacks(Callback* pool, int poolLength) {
 	for (int i = 0; i < poolLength; i++) {
 		if (pool[i] != NULL) {
 			pool[i]();
 		}
 	}
+}
+
+/*Moves the Ghost Block 1 position down. Returns true if moved*/
+bool Game::MoveGhostBlockY() {
+	if (!DetectCollision(0, 1, GhostBlock)) {
+		GhostBlock->y++;
+		return true;
+	}
+	return false;
+}
+
+/*Moves the Ghost Block down to the furthest position possible*/
+void Game::GreedyMoveGhostBlockY() {
+	while (MoveGhostBlockY());
+}
+
+void Game::PredictGhostBlock() {
+	GhostBlock->x = CurrentBlock->x;
+	GhostBlock->y = CurrentBlock->y;
+	GreedyMoveGhostBlockY();
 }

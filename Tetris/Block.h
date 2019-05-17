@@ -4,6 +4,7 @@ class Block
 public:
 	int x;
 	int y;
+	int type;
 
 	virtual int GetBrick(int pos_x, int pos_y) = 0;
 	virtual void SetBrick(int pos_x, int pos_y, int color) = 0;
