@@ -104,7 +104,7 @@ void Renderer::RenderTexture(SDL_Texture* texture, int x, int y, int w, int h) {
 }
 
 /*Renders text to a texture*/
-SDL_Texture* Renderer::PrintTextToTexture(char * msg, SDL_Texture * texture) {
+SDL_Texture* Renderer::PrintTextToTexture(const char * msg, SDL_Texture * texture) {
 	SDL_DestroyTexture(texture);
 	SDL_Color c = { 255, 255, 0 };
 	SDL_Surface* surfaceMessage = TTF_RenderText_Solid(OldStyle, msg, c);

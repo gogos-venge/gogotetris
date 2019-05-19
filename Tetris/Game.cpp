@@ -14,8 +14,9 @@ Game::Game(int Level)
 
 	//engage the first block here
 	NextBlock = ProduceBlock(RandomBlockIndex());
-	EngageBlock();
+	EngageBlock(true);
 
+	CanHold = true;
 }
 
 Game::~Game()
@@ -39,6 +40,11 @@ Block* Game::GetGhostBlock() {
 	return GhostBlock;
 }
 
+/*Returns the Held block*/
+Block* Game::GetHeldBlock() {
+	return HeldBlock;
+}
+
 /*Uses the Block factory to produce a block. Numbers 0 for Line to 6 for Z*/
 Block* Game::ProduceBlock(int index) {
 	return Block::Factory(index);
@@ -47,14 +53,17 @@ Block* Game::ProduceBlock(int index) {
 /*Generates a number from 1 to 7. Best used to pick a Block*/
 int Game::RandomBlockIndex() {
 	return rand() % 7;
-	//return (int)(7.0 * rand() / (RAND_MAX + 1.0));
 }
 
 /*Next block becomes the current block, Next block uses factory to get a new one, and current block is positioned to the top most center of the playfield
 Also if the engaged block collides, it means you lost*/
-void Game::EngageBlock() {
-	delete CurrentBlock;
-	CurrentBlock = NextBlock;
+void Game::EngageBlock(bool useNext) {
+	if (useNext) {
+		delete CurrentBlock;
+		CurrentBlock = NextBlock;
+		NextBlock = ProduceBlock(RandomBlockIndex());
+	}
+	
 	CurrentBlock->x = 4;
 	CurrentBlock->y = 20;
 
@@ -62,8 +71,6 @@ void Game::EngageBlock() {
 	GhostBlock = ProduceBlock(CurrentBlock->type);
 	PredictGhostBlock();
 
-	NextBlock = ProduceBlock(RandomBlockIndex());
-	
 	if (DetectCollision(0, 0, CurrentBlock)) {
 		GameStatus = GAMEOVER;
 	}
@@ -78,6 +85,29 @@ void Game::ImpressCurrentBlock() {
 			}
 		}
 	}
+}
+
+/*Hold (or swap) current block to/with held block*/
+void Game::HoldCurrentBlock() {
+	if (!CanHold) return;
+	CanHold = false;
+
+	//If hold block is NULL we don't have to swap.
+	if (HeldBlock == NULL) {
+		HeldBlock = ProduceBlock(CurrentBlock->type);
+		EngageBlock(true);
+		return;
+	}
+
+	//Hold the type
+	int type = CurrentBlock->type;
+	delete CurrentBlock;
+	CurrentBlock = ProduceBlock(HeldBlock->type);
+
+	//Produce the same type (notice how we don't hold the state of the block but produce a new one instead)
+	delete HeldBlock;
+	HeldBlock = ProduceBlock(type);
+	EngageBlock(false);
 }
 
 /*Moves the current block to the X axis, and also sends the Ghost Block to bottom. Returns true if it moved*/
@@ -97,6 +127,8 @@ bool Game::MoveCurrentBlockX(int offset_x) {
 bool Game::MoveCurrentBlockY(int offset_y) {
 	if (DetectCollision(0, offset_y, CurrentBlock)) {
 		TriggerCallbacks(CollisionYCallbacks, CBLENGTH);
+		//We now allow the game to hold bricks
+		CanHold = true;
 		return false;
 	}
 	else {
@@ -192,11 +224,13 @@ int Game::ClearLines(int* lines) {
 	for (int i = 0; i < 4; i++) {
 		if (lines[i] > 0) {
 			for (int j = 0; j < WIDTH; j++) {
+				//Clears the line (fills with zeroes)
 				Playfield[j][lines[i]] = 0;
 			}
 			for (int j = lines[i]; j >= 0; j--) { //height
 				for (int k = 0; k < WIDTH; k++) {
 					if (j > 0) {
+						//drops all the bricks from above
 						Playfield[k][j] = Playfield[k][j - 1];
 					}
 					else {
@@ -325,6 +359,7 @@ void Game::GreedyMoveGhostBlockY() {
 	while (MoveGhostBlockY());
 }
 
+/*Predicts the landing position of the ghost block*/
 void Game::PredictGhostBlock() {
 	GhostBlock->x = CurrentBlock->x;
 	GhostBlock->y = CurrentBlock->y;

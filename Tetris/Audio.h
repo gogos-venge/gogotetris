@@ -5,6 +5,7 @@ public:
 	Audio(Game * g);
 	~Audio();
 	void PlaySound(int index);
+	void StopSound();
 	void StartMusic();
 	void StopMusic();
 	void SetGame(Game * g);

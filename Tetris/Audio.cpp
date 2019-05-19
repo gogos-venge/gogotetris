@@ -36,6 +36,11 @@ void Audio::PlaySound(int index) {
 	Mix_PlayChannel(-1, Pool[index], 0);
 }
 
+/*Stops a channel*/
+void Audio::StopSound() {
+	Mix_Pause(-1);
+}
+
 /*Starts the theme music*/
 void Audio::StartMusic() {
 	Mix_PlayMusic(theme, -1);

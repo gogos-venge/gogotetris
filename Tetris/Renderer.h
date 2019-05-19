@@ -6,6 +6,11 @@
 #define FRAME_WIDTH SCREEN_WIDTH / 32
 #define FRAME_HEIGHT SCREEN_HEIGHT / 32
 #define BRICK_PADDING 0
+#define SCORE_TEXT_HEIGHT 50
+#define LEVEL_TEXT_HEIGHT 100
+#define LINES_TEXT_HEIGHT 150
+#define NEXT_TEXT_HEIGHT 500
+#define HELD_TEXT_HEIGHT 250
 
 class Renderer
 {
@@ -27,7 +32,7 @@ public:
 	void Update();
 	void SetGame(Game * g);
 
-	SDL_Texture* PrintTextToTexture(char * msg, SDL_Texture * texture);
+	SDL_Texture* PrintTextToTexture(const char * msg, SDL_Texture * texture);
 
 private:
 	void CreateBrickTextures(int bevel);

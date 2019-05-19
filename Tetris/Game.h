@@ -28,8 +28,10 @@ public:
 	Block*	GetCurrentBlock();
 	Block*	GetNextBlock();
 	Block*	GetGhostBlock();
-	void	EngageBlock();
+	Block*	GetHeldBlock();
+	void	EngageBlock(bool useNext);
 	void	ImpressCurrentBlock();
+	void	HoldCurrentBlock();
 
 	//Move methods
 	bool	MoveCurrentBlockX(int offset_x);
@@ -39,15 +41,15 @@ public:
 	void	HardDropCurrentBlock();
 
 	//Event Methods
-	void	OnCollisionY(Callback cb);
-	void	OnCollisionX(Callback cb);
-	void	OnCheckLine(Callback cb);
-	void	OnClearLine(Callback cb);
-	void	OnRotateBlock(Callback cb);
-	void	OnLevelIncrease(Callback cb);
-	void	OnTetrisCheck(Callback cb);
-	void	OnTetrisClear(Callback cb);
-	void	OnUpdateScore(Callback cb);
+	void	OnCollisionY(Callback);
+	void	OnCollisionX(Callback);
+	void	OnCheckLine(Callback);
+	void	OnClearLine(Callback);
+	void	OnRotateBlock(Callback);
+	void	OnLevelIncrease(Callback);
+	void	OnTetrisCheck(Callback);
+	void	OnTetrisClear(Callback);
+	void	OnUpdateScore(Callback);
 	void	AddCallback(Callback* pool, Callback cb, int poolLength);
 	void	TriggerCallbacks(Callback* pool, int poolLength);
 
@@ -76,6 +78,8 @@ private:
 	Block*	NextBlock;
 	Block*	CurrentBlock;
 	Block*	GhostBlock;
+	Block*	HeldBlock;
+	bool	CanHold;
 	bool	MoveGhostBlockY();
 	void	GreedyMoveGhostBlockY();
 	void	PredictGhostBlock();
