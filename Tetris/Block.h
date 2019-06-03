@@ -1,6 +1,5 @@
 #pragma once
-class Block
-{
+class Block {
 public:
 	int x;
 	int y;

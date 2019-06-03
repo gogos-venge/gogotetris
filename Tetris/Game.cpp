@@ -23,6 +23,8 @@ Game::~Game()
 {
 	delete CurrentBlock;
 	delete NextBlock;
+	delete GhostBlock;
+	delete HeldBlock;
 }
 
 /*Returns the current block*/
@@ -127,7 +129,7 @@ bool Game::MoveCurrentBlockX(int offset_x) {
 bool Game::MoveCurrentBlockY(int offset_y) {
 	if (DetectCollision(0, offset_y, CurrentBlock)) {
 		TriggerCallbacks(CollisionYCallbacks, CBLENGTH);
-		//We now allow the game to hold bricks
+		//We now allow the game to hold blocks
 		CanHold = true;
 		return false;
 	}
@@ -167,7 +169,9 @@ void Game::RotateCurrentBlockCCW() {
 
 /*Moves the current block down to the furthest possible position*/
 void Game::HardDropCurrentBlock() {
-	while (MoveCurrentBlockY(1));
+	while (MoveCurrentBlockY(1)) {
+		Score += 2;
+	}
 }
 
 /*Returns true if a block collides on a static brick of the playfield, or the borders of the tetris area*/
@@ -189,7 +193,7 @@ bool Game::DetectCollision(int offset_x, int offset_y, Block * b) {
 }
 
 /*Checks which lines are going to be removed. Returns true if found complete lines. This also triggers an event*/
-bool Game::CheckLines(int* Lines) {
+int Game::CheckLines(int* Lines) {
 	for (int i = 0; i < 4; i++) {
 		Lines[i] = 0;
 	}
@@ -209,13 +213,11 @@ bool Game::CheckLines(int* Lines) {
 	}
 	if (c == 4) {
 		TriggerCallbacks(TetrisCheckCallbacks, CBLENGTH);
-		return true;
 	}
 	else if (c < 4 && c > 0) {
 		TriggerCallbacks(CheckLineCallbacks, CBLENGTH);
-		return true;
 	}
-	return false;
+	return c;
 }
 
 /*Clears the previously checked lines. This triggers an event*/
@@ -251,7 +253,7 @@ int Game::ClearLines(int* lines) {
 }
 
 /*Updates metrics respecting the official Tetris scoring system. Calls event*/
-void Game::UpdateMetrics(int LineNumber) {
+int Game::UpdateMetrics(int LineNumber) {
 	int Multiplier = 0;
 	switch (LineNumber) {
 	case 0:
@@ -274,7 +276,8 @@ void Game::UpdateMetrics(int LineNumber) {
 	int CurLineLvl = TotalLines / 10;
 
 	TotalLines += LineNumber;
-	Score += Multiplier * (Level + 1);
+	int AddedScore = Multiplier * (Level + 1);
+	Score += AddedScore;
 	if (TotalLines / 10 > CurLineLvl) {
 		Level++;
 		TriggerCallbacks(LevelIncreaseCallbacks, CBLENGTH);
@@ -282,6 +285,8 @@ void Game::UpdateMetrics(int LineNumber) {
 	SpeedFps = FrameSpeed(Level);
 
 	TriggerCallbacks(UpdateScoreCallbacks, CBLENGTH);
+
+	return AddedScore;
 }
 
 /*Returns the speed in frames of each level based on the official Tetris guidelines*/

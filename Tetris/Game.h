@@ -54,13 +54,13 @@ public:
 	void	TriggerCallbacks(Callback* pool, int poolLength);
 
 	//Line Stuff
-	bool	CheckLines(int* lines);
+	int		CheckLines(int* lines);
 	int		ClearLines(int* lines);
 	int		Lines[4];
 
 	//Misc
 	bool	DetectCollision(int x, int y, Block * b);
-	void	UpdateMetrics(int LineNumber);
+	int		UpdateMetrics(int LineNumber);
 	int		FrameSpeed(int Level);
 	int		RandomBlockIndex();
 
@@ -84,7 +84,7 @@ private:
 	void	GreedyMoveGhostBlockY();
 	void	PredictGhostBlock();
 
-	//Event callbacks
+	//Event callbacks (non-thread)
 	Callback CollisionYCallbacks[CBLENGTH] = {};
 	Callback CollisionXCallbacks[CBLENGTH] = {};
 	Callback CheckLineCallbacks[CBLENGTH] = {};
