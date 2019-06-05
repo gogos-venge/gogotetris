@@ -38,7 +38,7 @@ Renderer::Renderer(Game* g)
 	}
 
 	CreateFrame();
-	CreateArikaTextures(4);
+	CreateArikaTextures(3);
 
 	if (!success) {
 		throw SDL_GetError();
@@ -47,7 +47,7 @@ Renderer::Renderer(Game* g)
 
 Renderer::~Renderer()
 {
-	for (int i = 0; i < 7; i++) {
+	for (int i = 0; i < BLOCK_SET_SIZE; i++) {
 		SDL_DestroyTexture(Bricks[i]);
 		SDL_DestroyTexture(GhostBricks[i]);
 	}

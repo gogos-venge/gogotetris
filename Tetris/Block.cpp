@@ -16,6 +16,7 @@ Block* Block::Factory(int type) {
 	// I (Light Blue)
 	switch (type) {
 		case 0:
+			delete b;
 			b = new Line();
 			break;
 		case 1:
@@ -41,6 +42,7 @@ Block* Block::Factory(int type) {
 			break;
 		case 4:
 			// O (Yellow)
+			delete b;
 			b = new Square();
 			break;
 		case 5:
