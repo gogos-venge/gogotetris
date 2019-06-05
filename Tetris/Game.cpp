@@ -13,7 +13,7 @@ Game::Game(int Level)
 	srand((Uint32)time(0));
 
 	//engage the first block here
-	NextBlock = ProduceBlock(RandomBlockIndex());
+	FillBlockBag();
 	EngageBlock(true);
 
 	CanHold = true;
@@ -22,9 +22,12 @@ Game::Game(int Level)
 Game::~Game()
 {
 	delete CurrentBlock;
-	delete NextBlock;
 	delete GhostBlock;
 	delete HeldBlock;
+
+	for (int i = 0; i < BAG_SIZE; i++) {
+		delete BlockBag[i];
+	}
 }
 
 /*Returns the current block*/
@@ -34,7 +37,7 @@ Block* Game::GetCurrentBlock() {
 
 /*Returns the next block*/
 Block* Game::GetNextBlock() {
-	return NextBlock;
+	return BlockBag[0];
 }
 
 /*Returns the Ghost block*/
@@ -47,6 +50,16 @@ Block* Game::GetHeldBlock() {
 	return HeldBlock;
 }
 
+Block* Game::PopBlock(){
+	Block* b = BlockBag[0];
+	for (int i = 1; i < BAG_SIZE; i++) {
+		BlockBag[i - 1] = BlockBag[i];
+	}
+	BlockBag[BAG_SIZE - 1] = NULL;
+	BlockBagCount--;
+	return b;
+}
+
 /*Uses the Block factory to produce a block. Numbers 0 for Line to 6 for Z*/
 Block* Game::ProduceBlock(int index) {
 	return Block::Factory(index);
@@ -54,7 +67,7 @@ Block* Game::ProduceBlock(int index) {
 
 /*Generates a number from 1 to 7. Best used to pick a Block*/
 int Game::RandomBlockIndex() {
-	return rand() % 7;
+	return rand() % BLOCK_SET_SIZE;
 }
 
 /*Next block becomes the current block, Next block uses factory to get a new one, and current block is positioned to the top most center of the playfield
@@ -62,8 +75,10 @@ Also if the engaged block collides, it means you lost*/
 void Game::EngageBlock(bool useNext) {
 	if (useNext) {
 		delete CurrentBlock;
-		CurrentBlock = NextBlock;
-		NextBlock = ProduceBlock(RandomBlockIndex());
+		CurrentBlock = PopBlock();
+		if (BlockBagCount <= BLOCK_SET_SIZE) {
+			FillBlockBag();
+		}
 	}
 	
 	CurrentBlock->x = 4;
@@ -110,6 +125,26 @@ void Game::HoldCurrentBlock() {
 	delete HeldBlock;
 	HeldBlock = ProduceBlock(type);
 	EngageBlock(false);
+}
+
+/*Shuffles a set of 7 blocks for 20 times and puts them in the Block Bag*/
+void Game::FillBlockBag(){
+	int pick[7] = { 0,1,2,3,4,5,6 };
+
+	for (int i = 0; i < 20; i++) {
+		int swap1 = RandomBlockIndex();
+		int swap2 = RandomBlockIndex();
+		int tmp = pick[swap1];
+		pick[swap1] = pick[swap2];
+		pick[swap2] = tmp;
+	}
+
+	for (int i = 0, j = 0; i < BAG_SIZE && j < BLOCK_SET_SIZE; i++) {
+		if (BlockBag[i] == NULL) {
+			BlockBag[i] = ProduceBlock(pick[j++]);
+			BlockBagCount++;
+		}
+	}
 }
 
 /*Moves the current block to the X axis, and also sends the Ghost Block to bottom. Returns true if it moved*/
@@ -182,7 +217,7 @@ bool Game::DetectCollision(int offset_x, int offset_y, Block * b) {
 			int x = b->x + i + offset_x; //future position to check
 			int y = b->y + j + offset_y;
 			if (b->GetBrick(i, j)) {
-				if (Playfield[x][y] != 0 || y == HEIGHT || x == WIDTH || x < 0) {
+				if (Playfield[x][y] != 0 || y == GAME_HEIGHT || x == GAME_WIDTH || x < 0) {
 					//collision
 					return true;
 				}
@@ -199,9 +234,9 @@ int Game::CheckLines(int* Lines) {
 	}
 
 	int c = 0;
-	for (int i = 0; i < HEIGHT; i++) {
+	for (int i = 0; i < GAME_HEIGHT; i++) {
 		bool full = true;
-		for (int j = 0; j < WIDTH; j++) {
+		for (int j = 0; j < GAME_WIDTH; j++) {
 			if (Playfield[j][i] == 0) {
 				full = false;
 				break;
@@ -225,12 +260,12 @@ int Game::ClearLines(int* lines) {
 	int CurrentLines = 0;
 	for (int i = 0; i < 4; i++) {
 		if (lines[i] > 0) {
-			for (int j = 0; j < WIDTH; j++) {
+			for (int j = 0; j < GAME_WIDTH; j++) {
 				//Clears the line (fills with zeroes)
 				Playfield[j][lines[i]] = 0;
 			}
 			for (int j = lines[i]; j >= 0; j--) { //height
-				for (int k = 0; k < WIDTH; k++) {
+				for (int k = 0; k < GAME_WIDTH; k++) {
 					if (j > 0) {
 						//drops all the bricks from above
 						Playfield[k][j] = Playfield[k][j - 1];

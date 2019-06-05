@@ -16,6 +16,8 @@ Audio::Audio(Game * g)
 	Pool[5] = Mix_LoadWAV("music\\tetris.wav");
 	Pool[6] = Mix_LoadWAV("music\\gameover.wav");
 	Pool[7] = Mix_LoadWAV("music\\drop.wav");
+
+	Mix_VolumeMusic(60);
 	SetGame(g);
 }
 

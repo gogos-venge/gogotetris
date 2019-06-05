@@ -2,6 +2,10 @@
 #include "Block.h"
 #include <functional>
 #define CBLENGTH 10
+#define GAME_HEIGHT 40
+#define GAME_WIDTH 10
+#define BAG_SIZE 14
+#define BLOCK_SET_SIZE 7
 
 typedef std::function<void()> Callback;
 
@@ -10,9 +14,6 @@ class Game
 public:
 	Game(int Level);
 	~Game();
-
-	static const int HEIGHT = 40;
-	static const int WIDTH = 10;
 	
 	//Metric properties
 	int		Level = 0;
@@ -21,17 +22,20 @@ public:
 	int		SpeedFps = 60;
 
 	//Board
-	int		Playfield[WIDTH][HEIGHT] = {};
+	int		Playfield[GAME_WIDTH][GAME_HEIGHT] = {};
 
 	//Blocks
+	Block*	BlockBag[BAG_SIZE];
 	Block*	ProduceBlock(int index);
 	Block*	GetCurrentBlock();
 	Block*	GetNextBlock();
 	Block*	GetGhostBlock();
 	Block*	GetHeldBlock();
+	Block*	PopBlock();
 	void	EngageBlock(bool useNext);
 	void	ImpressCurrentBlock();
 	void	HoldCurrentBlock();
+	void	FillBlockBag();
 
 	//Move methods
 	bool	MoveCurrentBlockX(int offset_x);
@@ -75,7 +79,6 @@ public:
 
 private:
 	//Block Stuff
-	Block*	NextBlock;
 	Block*	CurrentBlock;
 	Block*	GhostBlock;
 	Block*	HeldBlock;
@@ -83,6 +86,7 @@ private:
 	bool	MoveGhostBlockY();
 	void	GreedyMoveGhostBlockY();
 	void	PredictGhostBlock();
+	int		BlockBagCount = 0;
 
 	//Event callbacks (non-thread)
 	Callback CollisionYCallbacks[CBLENGTH] = {};

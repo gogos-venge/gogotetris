@@ -33,22 +33,22 @@ Block* Block::Factory(int type) {
 			b->SetBrick(1, 2, 3);
 			break;
 		case 3:
-			// O (Yellow)
-			b = new Square();
-			break;
-		case 4:
-			// S (Green)
-			b->SetBrick(1, 0, 5);
-			b->SetBrick(2, 0, 5);
-			b->SetBrick(0, 1, 5);
-			b->SetBrick(1, 1, 5);
-			break;
-		case 5:
 			// T (Purple)
 			b->SetBrick(0, 1, 6);
 			b->SetBrick(1, 1, 6);
 			b->SetBrick(2, 1, 6);
 			b->SetBrick(1, 2, 6);
+			break;
+		case 4:
+			// O (Yellow)
+			b = new Square();
+			break;
+		case 5:
+			// S (Green)
+			b->SetBrick(1, 0, 5);
+			b->SetBrick(2, 0, 5);
+			b->SetBrick(0, 1, 5);
+			b->SetBrick(1, 1, 5);
 			break;
 		case 6:
 			// Z (Red)

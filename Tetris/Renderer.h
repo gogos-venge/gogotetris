@@ -1,18 +1,21 @@
 #pragma once
 #include "Game.h"
 #include "Stars.h"
-#define SCREEN_WIDTH 600
+#define SCREEN_WIDTH 1200
 #define SCREEN_HEIGHT 750
-#define TETRIS_AREA (SCREEN_WIDTH / 3)*2
+#define TETRIS_AREA SCREEN_WIDTH / 3
 #define FRAME_WIDTH 15
 #define FRAME_HEIGHT 15
 #define TOP_OFFSET 0
-#define BRICK_PADDING 0
+#define LEFT_OFFSET TETRIS_AREA
+#define BRICK_WIDTH (TETRIS_AREA - FRAME_WIDTH * 2) / GAME_WIDTH
+#define BRICK_HEIGHT (SCREEN_HEIGHT  - FRAME_HEIGHT * 2) / (GAME_HEIGHT / 2)
 #define SCORE_TEXT_HEIGHT 50
 #define LEVEL_TEXT_HEIGHT 100
 #define LINES_TEXT_HEIGHT 150
 #define NEXT_TEXT_HEIGHT 500
-#define HELD_TEXT_HEIGHT 250
+
+#define HELD_TEXT_HEIGHT 50
 
 class Renderer
 {
@@ -30,7 +33,8 @@ public:
 	void RenderBlock(Block* b);
 	void RenderBlock(Block* b, bool isGhost);
 	void RenderBlock(Block* b, int tile_x, int tile_y, int offset_x, int offset_y, bool isGhost);
-	void RenderBrick(int tile_x, int tile_y, int color, int marginLeft, int marginTop, int padding, int offset_x, int offset_y, bool ghost);
+	void RenderBlock(Block* b, int tile_x, int tile_y, int tile_w, int tile_h, int offset_x, int offset_y, bool isGhost);
+	void RenderBrick(int tile_x, int tile_y, int width_x, int width_y, int color, int marginLeft, int marginTop, int padding, int offset_x, int offset_y, bool ghost);
 	void RenderTexture(SDL_Texture* texture, int x, int y, int w, int h);
 	void RenderFrame();
 	void RenderPlayfield();

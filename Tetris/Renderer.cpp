@@ -66,34 +66,36 @@ void Renderer::RenderBlock(Block* b) {
 
 /*Renders a Block based on the current Block->x and Block->y position*/
 void Renderer::RenderBlock(Block* b, bool isGhost) {
-	RenderBlock(b, b->x, b->y, 0, 0, isGhost);
+	RenderBlock(b, b->x, b->y, LEFT_OFFSET, 0, isGhost);
 }
 
 /*Renders a moving Block by using the RenderBrick method to a determined position on the Grid. Block's x/y tile position must be set by the user.*/
 void Renderer::RenderBlock(Block* b, int tile_x, int tile_y, int offset_x, int offset_y, bool isGhost) {
+	RenderBlock(b, tile_x, tile_y, BRICK_WIDTH, BRICK_HEIGHT, offset_x, offset_y, isGhost);
+}
+
+/*Renders a moving Block by using the RenderBrick method to a determined position on the Grid. Block's x/y tile position and width/height must be set by the user.*/
+void Renderer::RenderBlock(Block* b, int tile_x, int tile_y, int tile_w, int tile_h, int offset_x, int offset_y, bool isGhost) {
 	for (int i = 0; i < b->GetWidth(); i++) {
 		for (int j = 0; j < b->GetHeight(); j++) {
-			RenderBrick(tile_x + i, tile_y + j - 20, b->GetBrick(i, j), FRAME_WIDTH, FRAME_HEIGHT, 0, offset_x, offset_y, isGhost);
+			RenderBrick(tile_x + i, tile_y + j - 20, tile_w, tile_h, b->GetBrick(i, j), FRAME_WIDTH, FRAME_HEIGHT, 0, offset_x, offset_y, isGhost);
 		}
 	}
 }
 
 /*Renders a generated texture (Brick) to a 10x20 Grid. Tile Grid snapping is determined by the screen's width and height divided by the Game->Playfield's width and height.
 This method also offers a margin, a padding and an offset parameter to control where the Grid starts*/
-void Renderer::RenderBrick(int tile_x, int tile_y, int color, int marginLeft, int marginTop, int padding, int offset_x, int offset_y, bool ghost) {
+void Renderer::RenderBrick(int tile_x, int tile_y, int width_x, int width_y, int color, int marginLeft, int marginTop, int padding, int offset_x, int offset_y, bool ghost) {
 	if (!color) return;
 
-	int blockWidth = (TETRIS_AREA - marginLeft * 2) / g->WIDTH;
-	int blockHeight = ((SCREEN_HEIGHT - marginTop * 2) * 2) / g->HEIGHT;
-
-	int pos_x = tile_x * blockWidth;
-	int pos_y = tile_y * blockHeight;
+	int pos_x = tile_x * width_x;
+	int pos_y = tile_y * width_y;
 
 	RenderTexture(!ghost ? Bricks[color - 1] : GhostBricks[color - 1],
 		pos_x + padding + marginLeft + offset_x,
 		pos_y + padding + marginTop + offset_y,
-		blockWidth - padding * 2,
-		blockHeight - padding * 2
+		width_x - padding * 2,
+		width_y - padding * 2
 	);
 }
 
@@ -120,10 +122,10 @@ void Renderer::RenderFrame() {
 
 /*Renderes the static bricks*/
 void Renderer::RenderPlayfield() {
-	for (int i = 0; i < g->WIDTH; i++) {
-		for (int j = 0; j < g->HEIGHT; j++) {
+	for (int i = 0; i < GAME_WIDTH; i++) {
+		for (int j = 0; j < GAME_HEIGHT; j++) {
 			if (g->Playfield[i][j]) {
-				RenderBrick(i, j - 20, g->Playfield[i][j], FRAME_WIDTH, FRAME_HEIGHT, 0, 0, 0, false);
+				RenderBrick(i, j - 20, BRICK_WIDTH, BRICK_HEIGHT, g->Playfield[i][j], FRAME_WIDTH, FRAME_HEIGHT, 0, LEFT_OFFSET, 0, false);
 			}
 		}
 	}
@@ -150,9 +152,9 @@ void Renderer::RenderAnimateStars(Stars* s){
 void Renderer::ToggleHighlightLine(int time, int * lines) {
 	for (int k = 0; k < 4; k++) {
 		if (lines[k]) {
-			for (int j = 0; j < g->WIDTH; j++) {
+			for (int j = 0; j < GAME_WIDTH; j++) {
 				int c = time % 2 ? g->Playfield[j][lines[k]] : 8;
-				RenderBrick(j, lines[k] - 20, c, FRAME_WIDTH, FRAME_HEIGHT, 0, 0, 0, false);
+				RenderBrick(j, lines[k] - 20, BRICK_WIDTH, BRICK_HEIGHT, c, FRAME_WIDTH, FRAME_HEIGHT, 0, LEFT_OFFSET, 0, false);
 			}
 		}
 	}
@@ -206,8 +208,6 @@ void Renderer::SetGame(Game * g) {
 /*Generates the beveled pseudo-3d textures for each color*/
 void Renderer::CreateBrickTextures(int bevel) {
 
-	int blockWidth = (TETRIS_AREA - FRAME_WIDTH * 2) / g->WIDTH;
-	int blockHeight = blockWidth;
 	Color c[8] = {
 		{ 0xFF,0x00,0xF0,0xF0 },
 		{ 0xFF,0x00,0x00,0xF0 },
@@ -220,54 +220,52 @@ void Renderer::CreateBrickTextures(int bevel) {
 	};
 
 	for (int b = 0; b < 8; b++) {
-		Uint32* pixels = (Uint32*)malloc(blockWidth * blockHeight * sizeof(Uint32));
-		for (int i = 0; i < blockHeight; i++) {
-			for (int j = 0; j < blockWidth; j++) {
+		Uint32* pixels = (Uint32*)malloc(BRICK_WIDTH * BRICK_HEIGHT * sizeof(Uint32));
+		for (int i = 0; i < BRICK_HEIGHT; i++) {
+			for (int j = 0; j < BRICK_WIDTH; j++) {
 				Color tmp = { 255,0,0,0 };
-				if (i < bevel && j > i && j < blockWidth - i) {
+				if (i < bevel && j > i && j < BRICK_WIDTH - i) {
 					tmp.R = c[b].R | 0xD0;
 					tmp.G = c[b].G | 0xD0;
 					tmp.B = c[b].B | 0xD0;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
-				else if (i >= blockHeight - bevel && j >= blockHeight - i && j <= i) {
+				else if (i >= BRICK_HEIGHT - bevel && j >= BRICK_HEIGHT - i && j <= i) {
 					tmp.R = c[b].R / 4;
 					tmp.G = c[b].G / 4;
 					tmp.B = c[b].B / 4;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
 				else if (j < bevel) {
 					tmp.R = c[b].R / 2;
 					tmp.G = c[b].G / 2;
 					tmp.B = c[b].B / 2;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
-				else if (j > blockWidth - bevel) {
+				else if (j > BRICK_WIDTH - bevel) {
 					tmp.R = c[b].R / 2;
 					tmp.G = c[b].G / 2;
 					tmp.B = c[b].B / 2;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
 				else {
-					pixels[blockWidth * i + j] = ColorToInt(c[b]);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(c[b]);
 				}
 			}
 		}
 
-		Bricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
-		SDL_UpdateTexture(Bricks[b], NULL, pixels, blockWidth * sizeof(Uint32));
+		Bricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, BRICK_WIDTH, BRICK_HEIGHT);
+		SDL_UpdateTexture(Bricks[b], NULL, pixels, BRICK_WIDTH * sizeof(Uint32));
 		SDL_SetTextureBlendMode(Bricks[b], SDL_BLENDMODE_BLEND);
 
-		
-
-		for (int k = 0; k < blockWidth * blockHeight; k++) {
+		for (int k = 0; k < BRICK_WIDTH * BRICK_HEIGHT; k++) {
 			if (pixels[k]) {
 				pixels[k] -= 0xE0000000; //alpha
 			}
 		}
 
-		GhostBricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
-		SDL_UpdateTexture(GhostBricks[b], NULL, pixels, blockWidth * sizeof(Uint32));
+		GhostBricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, BRICK_WIDTH, BRICK_HEIGHT);
+		SDL_UpdateTexture(GhostBricks[b], NULL, pixels, BRICK_WIDTH * sizeof(Uint32));
 		SDL_SetTextureBlendMode(GhostBricks[b], SDL_BLENDMODE_BLEND);
 		
 		free(pixels);
@@ -277,8 +275,6 @@ void Renderer::CreateBrickTextures(int bevel) {
 /*Generates the beveled pseudo-3d textures for each color*/
 void Renderer::CreateArikaTextures(int bevel) {
 
-	int blockWidth = (TETRIS_AREA - FRAME_WIDTH * 2) / g->WIDTH;
-	int blockHeight = blockWidth;
 	Color c[8] = {
 		{ 0xFF,0x00,0xF0,0xF0 },
 		{ 0xFF,0x00,0x00,0xF0 },
@@ -291,57 +287,57 @@ void Renderer::CreateArikaTextures(int bevel) {
 	};
 
 	for (int b = 0; b < 8; b++) {
-		Uint32* pixels = (Uint32*)malloc(blockWidth * blockHeight * sizeof(Uint32));
-		for (int i = 0; i < blockHeight; i++) {
-			for (int j = 0; j < blockWidth; j++) {
+		Uint32* pixels = (Uint32*)malloc(BRICK_WIDTH * BRICK_HEIGHT * sizeof(Uint32));
+		for (int i = 0; i < BRICK_HEIGHT; i++) {
+			for (int j = 0; j < BRICK_WIDTH; j++) {
 				Color tmp = { 255,0,0,0 };
-				if (i < bevel && j > i && j < blockWidth - i) {
+				if (i < bevel && j > i && j < BRICK_WIDTH - i) {
 					tmp.R = c[b].R | 0xB0;
 					tmp.G = c[b].G | 0xB0;
 					tmp.B = c[b].B | 0xB0;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
-				else if (i >= blockHeight - bevel && j >= blockHeight - i && j <= i) {
+				else if (i >= BRICK_HEIGHT - bevel && j >= BRICK_HEIGHT - i && j <= i) {
 					tmp.R = c[b].R / 3;
 					tmp.G = c[b].G / 3;
 					tmp.B = c[b].B / 3;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
 				else if (j < bevel) {
 					tmp.R = c[b].R / 2;
 					tmp.G = c[b].G / 2;
 					tmp.B = c[b].B / 2;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
-				else if (j > blockWidth - bevel) {
+				else if (j > BRICK_WIDTH - bevel) {
 					tmp.R = c[b].R / 2;
 					tmp.G = c[b].G / 2;
 					tmp.B = c[b].B / 2;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
 				else {
 					tmp.R = c[b].R == 0 ? 0 : c[b].R - i * 4;
 					tmp.G = c[b].G == 0 ? 0 : c[b].G - i * 4;
 					tmp.B = c[b].B == 0 ? 0 : c[b].B - i * 4;
-					pixels[blockWidth * i + j] = ColorToInt(tmp);
+					pixels[BRICK_WIDTH * i + j] = ColorToInt(tmp);
 				}
 			}
 		}
 
-		Bricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
-		SDL_UpdateTexture(Bricks[b], NULL, pixels, blockWidth * sizeof(Uint32));
+		Bricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, BRICK_WIDTH, BRICK_HEIGHT);
+		SDL_UpdateTexture(Bricks[b], NULL, pixels, BRICK_WIDTH * sizeof(Uint32));
 		SDL_SetTextureBlendMode(Bricks[b], SDL_BLENDMODE_BLEND);
 
 
 
-		for (int k = 0; k < blockWidth * blockHeight; k++) {
+		for (int k = 0; k < BRICK_WIDTH * BRICK_HEIGHT; k++) {
 			if (pixels[k]) {
 				pixels[k] -= 0xE0000000; //alpha
 			}
 		}
 
-		GhostBricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, blockWidth, blockHeight);
-		SDL_UpdateTexture(GhostBricks[b], NULL, pixels, blockWidth * sizeof(Uint32));
+		GhostBricks[b] = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, BRICK_WIDTH, BRICK_HEIGHT);
+		SDL_UpdateTexture(GhostBricks[b], NULL, pixels, BRICK_WIDTH * sizeof(Uint32));
 		SDL_SetTextureBlendMode(GhostBricks[b], SDL_BLENDMODE_BLEND);
 
 		free(pixels);
@@ -350,14 +346,24 @@ void Renderer::CreateArikaTextures(int bevel) {
 
 /*Generates the frame around the playfield*/
 void Renderer::CreateFrame() {
-	const int WIDTH = TETRIS_AREA;
+	const int bw = BRICK_WIDTH;
+	const int bh = BRICK_HEIGHT;
 	int * pixels = (int*)malloc(TETRIS_AREA * SCREEN_HEIGHT * sizeof(Uint32));
 	memset(pixels, 0x0, TETRIS_AREA*SCREEN_HEIGHT * sizeof(Uint32));
 
 	for (int i = 0; i < TETRIS_AREA; i++) {
 		for (int j = 0; j < SCREEN_HEIGHT; j++) {
-			if (j < FRAME_HEIGHT || i < FRAME_WIDTH || i > WIDTH - FRAME_WIDTH || j > SCREEN_HEIGHT - FRAME_HEIGHT - TOP_OFFSET) {
+			if (j < FRAME_HEIGHT || i < FRAME_WIDTH || i > TETRIS_AREA - FRAME_WIDTH || j > SCREEN_HEIGHT - FRAME_HEIGHT - TOP_OFFSET) {
 				pixels[TETRIS_AREA * j + i] = 0xff98317e;
+			}
+			else {
+				if (!(i % bw)) {
+					pixels[TETRIS_AREA * j + i + FRAME_WIDTH] = 0x11ffffff;
+				}
+
+				if (!(j % bh)) {
+					pixels[TETRIS_AREA * (j + FRAME_HEIGHT) + i] = 0x11ffffff;
+				}
 			}
 		}
 	}
@@ -365,7 +371,7 @@ void Renderer::CreateFrame() {
 	SDL_UpdateTexture(Frame, NULL, pixels, TETRIS_AREA * sizeof(Uint32));
 	SDL_SetTextureBlendMode(Frame, SDL_BLENDMODE_BLEND);
 
-	TetrisRect = { 0,0,TETRIS_AREA, SCREEN_HEIGHT };
+	TetrisRect = { LEFT_OFFSET,0,TETRIS_AREA, SCREEN_HEIGHT };
 
 	free(pixels);
 }
@@ -374,4 +380,3 @@ void Renderer::CreateFrame() {
 int Renderer::ColorToInt(Color c) {
 	return c.A << 24 | c.R << 16 | c.G << 8 | c.B;
 }
-
